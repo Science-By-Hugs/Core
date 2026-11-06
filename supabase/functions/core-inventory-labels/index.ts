@@ -5,16 +5,24 @@ import QRCode from "npm:qrcode@1.5.4";
 // Phase 2 inventory visibility and label rendering ONLY. No inventory mutations.
 // Private unit scan tokens never pass through the customer-facing Nexus catalog.
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  // Intentionally no wildcard CORS: caller origin is validated below.
   "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Cache-Control": "no-store",
+  "Vary": "Origin",
 };
-const json = (payload: unknown, status = 200) =>
-  new Response(JSON.stringify(payload), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+const allowedOrigins = new Set([
+  "https://core.sciencebyhugs.com",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+const corsFor = (req: Request) => {
+  const origin = req.headers.get("Origin") || "";
+  return {
+    ...corsHeaders,
+    ...(allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
+  };
+};
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type UnitRow = {
   id: string;
@@ -26,7 +34,13 @@ type UnitRow = {
 };
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const cors = corsFor(req);
+  const json = (payload: unknown, status = 200) =>
+    new Response(JSON.stringify(payload), {
+      status,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const authorization = req.headers.get("Authorization") || "";
@@ -130,7 +144,7 @@ Deno.serve(async (req: Request) => {
           return json({ error: "Inventory relationship mismatch" }, 409);
         const payload = "SBH:UNIT:" + unit.scan_token.toLowerCase();
         const qr_svg = await QRCode.toString(payload, {
-          type: "svg", width: 184, margin: 1, errorCorrectionLevel: "M",
+          type: "svg", width: 184, margin: 4, errorCorrectionLevel: "M",
         });
         labels.push({
           unit_id: unit.id,

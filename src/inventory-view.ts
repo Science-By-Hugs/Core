@@ -28,19 +28,40 @@ const printCss =
   '.sbh-label-caution { font-size:5.5pt; font-weight:700; }' +
   '.sbh-label-qr,.sbh-label-qr svg { width:.72in !important; height:.72in !important; display:block; }'
 
-function printPrepared(labels: UnitLabel[], esc: Esc): boolean {
-  // Synchronous popup opening from a real click avoids blocked popups.
+async function printPrepared(labels: UnitLabel[], esc: Esc): Promise<string | null> {
+  // Open during the direct click; query current state before sending labels to the printer.
   const popup = window.open('', '_blank', 'width=640,height=500')
-  if (!popup) return false
-  const documentHtml = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
-    '<title>Science By Hugs — 2x1 labels</title><style>' + printCss + '</style></head><body>' +
-    labels.map(item => labelMarkup(item, esc)).join('') +
-    '<script>window.addEventListener("load",function(){window.focus();window.print()})<' + '/script>' +
-    '</body></html>'
+  if (!popup) return 'Allow Core popups to print labels.'
   popup.document.open()
-  popup.document.write(documentHtml)
+  popup.document.write('<!doctype html><html><body>Checking current unit status before printing…</body></html>')
   popup.document.close()
-  return true
+  try {
+    const current = await prepareInventoryLabels(labels.map(item => item.unit_id))
+    const isCurrent = current.length === labels.length && current.every((item, index) => {
+      const original = labels[index]
+      return item.unit_id === original.unit_id &&
+        item.state === original.state &&
+        item.internal_lot === original.internal_lot &&
+        item.ordinal === original.ordinal &&
+        item.product_name === original.product_name
+    })
+    if (!isCurrent) {
+      popup.close()
+      return 'A unit changed since labels were prepared. Refresh inventory and try again.'
+    }
+    const documentHtml = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+      '<title>Science By Hugs — 2x1 labels</title><style>' + printCss + '</style></head><body>' +
+      current.map(item => labelMarkup(item, esc)).join('') +
+      '<script>window.addEventListener("load",function(){window.focus();window.print()})<' + '/script>' +
+      '</body></html>'
+    popup.document.open()
+    popup.document.write(documentHtml)
+    popup.document.close()
+    return null
+  } catch {
+    popup.close()
+    return 'Could not recheck unit status. Printing was cancelled.'
+  }
 }
 
 export function inventoryPageMarkup(email: string, esc: Esc): string {
@@ -117,8 +138,15 @@ export async function bindInventoryPage(esc: Esc): Promise<void> {
               '<p>Printer: 2×1 inches · landscape · actual size · no margins.</p>' +
               '<button class="primary" type="button" id="sbh-inventory-print">Print labels</button></div>' +
               '<div class="sbh-inventory-preview-grid">' + labels.map(label => labelMarkup(label, esc)).join('') + '</div>'
-            preview!.querySelector<HTMLButtonElement>('#sbh-inventory-print')?.addEventListener('click', () => {
-              if (!printPrepared(labels, esc)) status!.textContent = 'Allow Core popups to print labels.'
+            preview!.querySelector<HTMLButtonElement>('#sbh-inventory-print')?.addEventListener('click', async event => {
+              const control = event.currentTarget as HTMLButtonElement
+              control.disabled = true
+              try {
+                const failure = await printPrepared(labels, esc)
+                if (failure) status!.textContent = failure
+              } finally {
+                control.disabled = false
+              }
             })
             preview!.scrollIntoView({ behavior: 'smooth', block: 'start' })
           } catch (error) {

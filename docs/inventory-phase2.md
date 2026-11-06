@@ -23,3 +23,10 @@ Branch: feature/phase2-inventory-qr-labels.
 ## Limits
 100 lots, 1000 units in list; 50 unit IDs per print batch. Overflow fails rather than silently undercounting.
 If an unrelated production incident occurs, use docs/inventory-launch-runbook.md for owner-led reconciliation; do not autonomously rollback or restore paid units.
+
+## November 6 verification improvements
+- QR output uses a four-module quiet zone (matching the calibration sample).
+- The Core-only endpoint emits Access-Control-Allow-Origin only for permitted Core and local development origins.
+- Printing requests a fresh read-only snapshot; changed unit state/lot/ordinal/name blocks printing.
+- Staging deployment is **not complete**: the production Supabase project has no development branches and no dedicated active Core staging project was confirmed. Do not substitute production for staging.
+- The synthetic calibration PDF is separate from the repository and has no live scan tokens.

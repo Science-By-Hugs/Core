@@ -29,3 +29,14 @@ test('prints exactly 2x1 landscape and is integrated into Core',()=>{
   assert.match(view,/width:2in; height:1in/)
   assert.match(main,/navLink\('inventory', 'Inventory'\)/)
 })
+
+test('QR includes a four-module quiet zone and no wildcard inventory CORS',()=>{
+  assert.match(endpoint,/margin: 4, errorCorrectionLevel: "M"/)
+  assert.match(endpoint,/"https:\/\/core\.sciencebyhugs\.com"/)
+  assert.doesNotMatch(endpoint,/"Access-Control-Allow-Origin": "\*"/)
+})
+test('printing revalidates current unit states before opening print dialog',()=>{
+  assert.match(view,/const current = await prepareInventoryLabels\(labels\.map\(item => item\.unit_id\)\)/)
+  assert.match(view,/item\.state === original\.state/)
+  assert.match(view,/Printing was cancelled/)
+})
