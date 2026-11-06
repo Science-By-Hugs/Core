@@ -9,6 +9,8 @@ import { bindOrdersPage, ordersPageMarkup } from './orders-view'
 import { bindCheckoutPendingPage, checkoutPendingPageMarkup } from './checkout-pending-view'
 import { bindCustomersPage, customersPageMarkup } from './customers-view'
 import { bindCatalogPage, catalogPageMarkup } from './catalog-view'
+import { bindInventoryPage, inventoryPageMarkup } from './inventory-view'
+import './inventory-labels.css'
 import { bindDashboardPage, dashboardPageMarkup } from './dashboard-view'
 import { bindAuditPage, auditPageMarkup } from './audit-view'
 import { bindAnalyticsPage, analyticsPageMarkup } from './analytics-view'
@@ -62,6 +64,7 @@ type CoreView =
   | 'checkout-pending'
   | 'customers'
   | 'catalog'
+  | 'inventory'
   | 'analytics'
   | 'finance'
   | 'referrals'
@@ -77,6 +80,7 @@ const CORE_VIEWS: CoreView[] = [
   'checkout-pending',
   'customers',
   'catalog',
+  'inventory',
   'analytics',
   'finance',
   'referrals',
@@ -132,6 +136,7 @@ function shell(content: string, signedIn = false) {
     'checkout-pending': '⌛',
     customers: '◎',
     catalog: '◇',
+    inventory: '▣',
     analytics: '↗',
     finance: '$',
     referrals: '⌘',
@@ -161,6 +166,7 @@ function shell(content: string, signedIn = false) {
       '<div class="core-nav-group"><span class="core-nav-label">BUSINESS</span>' +
         navLink('customers', 'Customers') +
         navLink('catalog', 'Catalog') +
+        navLink('inventory', 'Inventory') +
         navLink('referrals', 'Referrals') +
         navLink('analytics', 'Analytics') +
       '</div>' +
@@ -259,7 +265,7 @@ function shell(content: string, signedIn = false) {
   const sectionMap: Array<[string, CoreView]> = [
     ['dashboard', 'dashboard'], ['operations', 'operations'], ['fulfillment', 'operations'],
     ['orders', 'orders'], ['checkout pending', 'checkout-pending'], ['pending checkout', 'checkout-pending'],
-    ['customers', 'customers'], ['catalog', 'catalog'],
+    ['customers', 'customers'], ['catalog', 'catalog'], ['inventory', 'inventory'],
     ['finance', 'finance'], ['payments', 'finance'], ['analytics', 'analytics'],
     ['referrals', 'referrals'], ['admin', 'admin-tools'], ['alerts', 'notifications'],
     ['notifications', 'notifications'], ['audit', 'audit'], ['account', 'account'], ['profile', 'account'],
@@ -1072,6 +1078,11 @@ async function renderCatalog(email: string) {
   await bindCatalogPage({ escapeHtml, money, dateTime })
 }
 
+async function renderInventory(email: string) {
+  shell(inventoryPageMarkup(email, escapeHtml), true)
+  await bindInventoryPage(escapeHtml)
+}
+
 async function renderExecutiveDashboard(email: string) {
   shell(dashboardPageMarkup(email, escapeHtml), true)
   await bindDashboardPage({ escapeHtml, money, dateTime })
@@ -1165,6 +1176,11 @@ async function render() {
 
   if (activeView === 'catalog') {
     await renderCatalog(email)
+    return
+  }
+
+  if (activeView === 'inventory') {
+    await renderInventory(email)
     return
   }
 
