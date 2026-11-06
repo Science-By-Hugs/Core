@@ -1,0 +1,31 @@
+const test=require('node:test')
+const assert=require('node:assert/strict')
+const fs=require('node:fs')
+const path=require('node:path')
+const get=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8')
+const endpoint=get('supabase/functions/core-inventory-labels/index.ts')
+const view=get('src/inventory-view.ts')
+const main=get('src/main.ts')
+test('inventory endpoint is owner/admin only',()=>{
+  assert.match(endpoint,/client\.auth\.getUser\(\)/)
+  assert.match(endpoint,/role !== "owner" && role !== "admin"/)
+})
+test('inventory backend does not mutate checkout or inventory',()=>{
+  assert.doesNotMatch(endpoint,/\.(insert|update|delete|upsert|rpc)\s*\(/)
+  assert.doesNotMatch(endpoint,/core_checkout_(reserve|commit|release)_inventory/)
+})
+test('QR uses persistent unit token and no third-party generator',()=>{
+  assert.match(endpoint,/"SBH:UNIT:" \+ unit\.scan_token\.toLowerCase\(\)/)
+  assert.match(endpoint,/QRCode\.toString/)
+  assert.doesNotMatch(endpoint,/randomUUID\(/)
+})
+test('non-available units are visibly not sellable',()=>{
+  assert.match(view,/NOT AVAILABLE/)
+  assert.match(view,/data-state="damaged"/)
+  assert.match(view,/label\.state !== state/)
+})
+test('prints exactly 2x1 landscape and is integrated into Core',()=>{
+  assert.match(view,/@page \{ size: 2in 1in; margin: 0; \}/)
+  assert.match(view,/width:2in; height:1in/)
+  assert.match(main,/navLink\('inventory', 'Inventory'\)/)
+})

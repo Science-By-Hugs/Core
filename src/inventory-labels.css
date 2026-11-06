@@ -1,0 +1,32 @@
+/* Core Phase 2 private inventory screen. */
+.sbh-inventory{display:grid;gap:18px;margin-bottom:42px}
+.sbh-inventory-tools,.sbh-inventory-actions{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.sbh-inventory-tools label{display:grid;gap:6px;min-width:min(310px,100%);flex:1;color:var(--muted);font-size:.78rem}
+.sbh-inventory-tools input{background:var(--surface-2);border:1px solid #344254;border-radius:12px;padding:11px 12px;color:var(--text);width:100%}
+.sbh-inventory-lot{border:1px solid #263341;border-radius:20px;padding:20px;background:var(--surface);margin-bottom:14px}
+.sbh-inventory-lot-head{display:flex;justify-content:space-between;gap:20px}
+.sbh-inventory-lot h2{margin:6px 0;font-size:1.35rem}
+.sbh-inventory-lot p{color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
+.sbh-inventory-counts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;min-width:220px}
+.sbh-inventory-counts span{background:var(--surface-2);border-radius:10px;padding:9px;font-size:.72rem;color:var(--muted)}
+.sbh-inventory-counts strong{display:block;color:var(--text);font-size:1.15rem}
+.sbh-inventory-actions{padding:12px 0}
+.sbh-inventory-units{margin-top:8px;font-size:.84rem}
+.sbh-inventory-units summary{cursor:pointer;color:var(--secondary);padding:12px 0}
+.sbh-inventory-unit-table{overflow-x:auto}
+.sbh-inventory-unit-table table{width:100%;border-collapse:collapse}
+.sbh-inventory-unit-table th,.sbh-inventory-unit-table td{text-align:left;padding:9px;border-bottom:1px solid #273441}
+.sbh-inventory-unit-table code{font-size:.72rem;overflow-wrap:anywhere}
+.sbh-inventory-print-head{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;border-top:1px solid #344254;padding:22px 0 12px}
+.sbh-inventory-print-head p{color:var(--muted);font-size:.8rem}
+.sbh-inventory-preview-grid{display:flex;flex-wrap:wrap;gap:12px}
+.sbh-inventory-preview-grid .sbh-thermal-label{background:white;color:black;border:1px solid #ccc}
+.sbh-thermal-label{box-sizing:border-box;width:2in;height:1in;display:grid;grid-template-columns:1.12in .72in;gap:.045in;padding:.055in;align-items:center;overflow:hidden;font-family:Arial,Helvetica,sans-serif}
+.sbh-label-copy{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.025in}
+.sbh-label-brand{font-size:7pt;font-weight:800}
+.sbh-label-product{font-size:8.3pt;font-weight:700;line-height:1.05;overflow-wrap:anywhere}
+.sbh-label-lot{font-size:6.2pt;font-weight:700;overflow-wrap:anywhere}
+.sbh-label-unit{font-size:6.4pt;font-weight:700}
+.sbh-label-caution{font-size:5.5pt;font-weight:700}
+.sbh-label-qr,.sbh-label-qr svg{width:.72in;height:.72in}
+@media(max-width:760px){.sbh-inventory-lot-head{display:block}.sbh-inventory-counts{min-width:0;margin:14px 0}}
